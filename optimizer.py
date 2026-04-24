@@ -222,13 +222,11 @@ class Optimizer:
             
             # If this is an unconditional GOTO, mark next instructions as dead
             if tac.op == "GOTO" and tac.arg1:
-                # Skip instructions until we reach the target label
+                # Skip instructions until we reach ANY label
+                # Code after an unconditional jump is unreachable until we hit a label
                 i += 1
-                target_label = tac.arg1
-                
-                # Find the target label
                 while i < len(tac_list):
-                    if tac_list[i].label == target_label:
+                    if tac_list[i].label is not None:
                         break
                     i += 1
                 continue

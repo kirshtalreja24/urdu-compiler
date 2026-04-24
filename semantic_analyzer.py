@@ -176,12 +176,10 @@ class SemanticAnalyzer:
         
         # Type check the expression
         expr_type = self.get_expression_type(expr_node)
-        if expr_type and expr_type != var_type:
-            # Allow some implicit conversions
-            if not self.is_compatible_type(var_type, expr_type):
-                self.warnings.append(
-                    f"Type mismatch: '{var_name}' declared as {var_type}, assigned {expr_type} at line {line}"
-                )
+        if expr_type and not self.is_compatible_type(var_type, expr_type):
+            self.warnings.append(
+                f"Type mismatch: '{var_name}' declared as {var_type}, assigned {expr_type} at line {line}"
+            )
     
     def analyze_assignment(self, node: ASTNode):
         """Analyze variable assignment"""
@@ -204,11 +202,10 @@ class SemanticAnalyzer:
         
         # Type check
         expr_type = self.get_expression_type(expr_node)
-        if expr_type and expr_type != symbol['type']:
-            if not self.is_compatible_type(symbol['type'], expr_type):
-                self.warnings.append(
-                    f"Type mismatch: '{var_name}' is {symbol['type']}, assigned {expr_type} at line {line}"
-                )
+        if expr_type and not self.is_compatible_type(symbol['type'], expr_type):
+            self.warnings.append(
+                f"Type mismatch: '{var_name}' is {symbol['type']}, assigned {expr_type} at line {line}"
+            )
     
     def analyze_if_statement(self, node: ASTNode):
         """Analyze if statement - enter new scope"""
@@ -220,23 +217,24 @@ class SemanticAnalyzer:
         
         if condition_type and condition_type != 'SahiGhalat':
             line = condition.token.line if condition.token else 0
-            self.warnings.append(
-                f"If condition should be boolean, got {condition_type} at line {line}"
+            self.errors.append(
+                f"If condition must be boolean (SahiGhalat), got {condition_type} at line {line}"
             )
+        elif not condition_type:
+            line = condition.token.line if condition.token else 0
+            self.errors.append(f"Invalid condition in if statement at line {line}")
         
         # Analyze then block in new scope
         then_block = node.children[1]
         self.symbol_table.enter_scope()
-        for stmt in then_block.children:
-            self.analyze_node(stmt)
+        self.analyze_node(then_block)
         self.symbol_table.exit_scope()
         
         # Analyze else block if present
         if len(node.children) > 2:
             else_block = node.children[2]
             self.symbol_table.enter_scope()
-            for stmt in else_block.children:
-                self.analyze_node(stmt)
+            self.analyze_node(else_block)
             self.symbol_table.exit_scope()
     
     def analyze_while_statement(self, node: ASTNode):
@@ -249,15 +247,17 @@ class SemanticAnalyzer:
         
         if condition_type and condition_type != 'SahiGhalat':
             line = condition.token.line if condition.token else 0
-            self.warnings.append(
-                f"While condition should be boolean, got {condition_type} at line {line}"
+            self.errors.append(
+                f"While condition must be boolean (SahiGhalat), got {condition_type} at line {line}"
             )
+        elif not condition_type:
+            line = condition.token.line if condition.token else 0
+            self.errors.append(f"Invalid condition in while statement at line {line}")
         
         # Analyze body in new scope
         body = node.children[1]
         self.symbol_table.enter_scope()
-        for stmt in body.children:
-            self.analyze_node(stmt)
+        self.analyze_node(body)
         self.symbol_table.exit_scope()
     
     def analyze_print_statement(self, node: ASTNode):
@@ -279,6 +279,9 @@ class SemanticAnalyzer:
             symbol = self.symbol_table.lookup(var_name)
             if symbol:
                 return symbol['type']
+            
+            line = node.token.line if node.token else 0
+            self.errors.append(f"Variable '{var_name}' used before declaration at line {line}")
             return None
         
         if node.node_type == 'INTEGER':
@@ -337,6 +340,10 @@ class SemanticAnalyzer:
         
         # Allow int to float conversion
         if target == 'TairtaAdad' and source == 'Adad':
+            return True
+        
+        # Mutaghayyar is compatible with anything
+        if target == 'Mutaghayyar' or source == 'Mutaghayyar':
             return True
         
         return False
