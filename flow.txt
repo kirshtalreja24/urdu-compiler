@@ -1,0 +1,86 @@
+URDU COMPILER PROJECT FLOW
+===========================
+
+This document explains the step-by-step flow of the Urdu Compiler project, from source code to execution, highlighting the key functions in each phase.
+
+1. START: USER INPUT (app.py)
+----------------------------
+The process begins when source code is entered into the Streamlit interface.
+- Entry point: `app.py` triggers compilation when the "Compile" button is clicked.
+
+2. PHASE 1: LEXICAL ANALYSIS (lexical_analyzer.py)
+------------------------------------------------
+The source code is broken down into meaningful tokens (keywords, identifiers, literals, etc.).
+- `LexicalAnalyzer.__init__(source_code)`: Initializes the lexer with Urdu source code.
+- `LexicalAnalyzer.tokenize()`: Main loop that performs DFA-based tokenization.
+    - `skip_whitespace()`: Ignores spaces and newlines.
+    - `skip_comment()`: Ignores single-line comments (//).
+    - `read_identifier()`: Recognizes keywords and variable names.
+    - `read_number()`: Recognizes integers and floats.
+    - `read_string()`: Recognizes string literals in quotes.
+- `LexicalAnalyzer.get_errors()`: Checks for unknown characters or unterminated strings.
+
+3. PHASE 2: SYNTAX ANALYSIS (syntax_analyzer.py)
+-----------------------------------------------
+The list of tokens is transformed into a hierarchical Parse Tree/Abstract Syntax Tree (AST).
+- `SyntaxAnalyzer.__init__(tokens)`: Initializes the parser with the tokens from Phase 1.
+- `SyntaxAnalyzer.parse()`: Main entry point for the recursive descent parser.
+    - `parse_program()`: Starts parsing from the root level.
+    - `parse_statement_list()`: Processes multiple statements in sequence.
+    - `parse_statement()`: Dispatches to specific statement parsers (Agar, JabTak, Dikhao, etc.).
+    - `parse_declaration()`: Parses variable declarations (e.g., Adad x = 10;).
+    - `parse_assignment()`: Parses variable updates (e.g., x = 20;).
+    - `parse_if_statement()`: Parses "Agar-Warna" blocks.
+    - `parse_while_statement()`: Parses "JabTak" loop blocks.
+    - `parse_print_statement()`: Parses "Dikhao" output commands.
+    - `parse_expression()`: Handles complex logical and mathematical expressions.
+- `SyntaxAnalyzer.get_errors()`: Reports grammar violations.
+
+4. PHASE 3: SEMANTIC ANALYSIS (semantic_analyzer.py)
+--------------------------------------------------
+The AST is checked for logical correctness, such as variable declarations and type safety.
+- `SemanticAnalyzer.analyze()`: Main analysis function that traverses the AST.
+    - `analyze_node()`: Recursively visits every node in the AST.
+    - `analyze_declaration()`: Registers variables in the Symbol Table.
+    - `analyze_assignment()`: Checks if variables were declared before use.
+    - `analyze_if_statement()` / `analyze_while_statement()`: Manages scope entry/exit.
+    - `get_expression_type()`: Performs type checking for expressions.
+    - `is_compatible_type()`: Validates if types can be assigned/mixed.
+- `SymbolTable.declare()` / `SymbolTable.lookup()`: Manages variable storage across scopes.
+
+5. PHASE 4: INTERMEDIATE CODE GENERATION (intermediate_code_generator.py)
+------------------------------------------------------------------------
+The AST is converted into Three-Address Code (TAC), a flat list of simple instructions.
+- `IntermediateCodeGenerator.generate()`: Converts the validated AST into TAC.
+    - `generate_from_node()`: Main dispatcher for TAC generation.
+    - `new_temp()`: Creates temporary variables (t0, t1, ...) for intermediate results.
+    - `new_label()`: Creates labels (L0, L1, ...) for jumps and loops.
+    - `generate_declaration()` / `generate_assignment()`: Produces ASSIGN instructions.
+    - `generate_if_statement()` / `generate_while_statement()`: Produces IF_FALSE_GOTO and GOTO instructions.
+    - `generate_binary_op()`: Produces ADD, SUB, MUL, DIV, EQ, NE, etc.
+- `IntermediateCodeGenerator.format_tac()`: Converts the TAC objects into a readable string.
+
+6. PHASE 5: OPTIMIZATION (optimizer.py)
+--------------------------------------
+The TAC is refined to improve efficiency without changing its meaning.
+- `Optimizer.optimize()`: Entry point for the optimization engine.
+    - `constant_folding()`: Evaluates constant expressions at compile time (e.g., 5 + 3 becomes 8).
+    - `dead_code_elimination()`: Removes instructions that can never be reached.
+    - `get_constant_value()`: Identifies variables that hold constant values.
+    - `evaluate_operation()` / `evaluate_comparison()`: Helper functions for compile-time calculation.
+
+7. PHASE 6: CODE GENERATION & EXECUTION (code_generator.py)
+----------------------------------------------------------
+The optimized TAC is executed by an interpreter to produce the final output.
+- `CodeGenerator.__init__(optimized_tac)`: Loads the final list of instructions.
+- `CodeGenerator.generate()`: Creates a Python-like representation of the executable code.
+- `CodeGenerator.execute()`: The stack-based interpreter loop.
+    - `build_label_map()`: Maps jump labels to instruction indices for fast lookup.
+    - `get_value()`: Resolves variables to their current values in memory.
+    - `evaluate_arithmetic()` / `evaluate_comparison()`: Performs runtime calculations.
+- `CodeGenerator.get_output()`: Collects everything sent to "Dikhao" commands.
+- `CodeGenerator.get_memory_state()`: Provides the final state of all variables.
+
+8. END: DISPLAY RESULTS (app.py)
+-------------------------------
+The output and the internal states of each phase are displayed to the user in the UI tabs.
