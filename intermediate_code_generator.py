@@ -125,7 +125,7 @@ class IntermediateCodeGenerator:
             elif node.node_type == 'STRING':
                 return node.value
             elif node.node_type == 'BOOLEAN':
-                return 'true' if node.value else 'false'
+                return 'Sahi' if node.value else 'Ghalat'
         
         return None
     

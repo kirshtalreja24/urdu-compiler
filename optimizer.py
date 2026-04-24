@@ -72,8 +72,8 @@ class Optimizer:
                 if arg1_val is not None and arg2_val is not None:
                     result_val = self.evaluate_comparison(tac.op, arg1_val, arg2_val)
                     if result_val is not None:
-                        self.constants[tac.result] = 'true' if result_val else 'false'
-                        optimized.append(ThreeAddressCode("ASSIGN", 'true' if result_val else 'false', None, tac.result))
+                        self.constants[tac.result] = 'Sahi' if result_val else 'Ghalat'
+                        optimized.append(ThreeAddressCode("ASSIGN", 'Sahi' if result_val else 'Ghalat', None, tac.result))
                         continue
             
             # Check for constant logical operations
@@ -84,8 +84,8 @@ class Optimizer:
                 if arg1_val is not None and arg2_val is not None:
                     result_val = self.evaluate_logical(tac.op, arg1_val, arg2_val)
                     if result_val is not None:
-                        self.constants[tac.result] = 'true' if result_val else 'false'
-                        optimized.append(ThreeAddressCode("ASSIGN", 'true' if result_val else 'false', None, tac.result))
+                        self.constants[tac.result] = 'Sahi' if result_val else 'Ghalat'
+                        optimized.append(ThreeAddressCode("ASSIGN", 'Sahi' if result_val else 'Ghalat', None, tac.result))
                         continue
             
             # Check for constant unary operations
@@ -131,9 +131,9 @@ class Optimizer:
             pass
         
         # Check if it's a boolean
-        if var == 'true':
+        if var == 'Sahi':
             return 1.0
-        if var == 'false':
+        if var == 'Ghalat':
             return 0.0
         
         # Check if it's in constants table
@@ -144,9 +144,9 @@ class Optimizer:
                     return float(const_val)
                 return int(const_val)
             except ValueError:
-                if const_val == 'true':
+                if const_val == 'Sahi':
                     return 1.0
-                if const_val == 'false':
+                if const_val == 'Ghalat':
                     return 0.0
         
         return None

@@ -396,13 +396,13 @@ class SyntaxAnalyzer:
         
         if token.type == TokenType.STRING:
             self.advance()
-            # Remove quotes
-            value = token.value[1:-1] if len(token.value) > 1 else ""
+            # Keep quotes for code generator to identify as literal
+            value = token.value
             return ASTNode('STRING', value=value, token=token)
         
-        if token.type == TokenType.KEYWORD and token.value in ['true', 'false']:
+        if token.type == TokenType.KEYWORD and token.value in ['Sahi', 'Ghalat']:
             self.advance()
-            return ASTNode('BOOLEAN', value=(token.value == 'true'), token=token)
+            return ASTNode('BOOLEAN', value=(token.value == 'Sahi'), token=token)
         
         if token.type == TokenType.LPAREN:
             self.advance()
